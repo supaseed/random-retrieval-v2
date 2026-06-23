@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>⚛ Physics Quiz · Nuclear Edition</title>
+  <!-- Tailwind CSS + Fallout / Nuclear Theme -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'vault-bg': '#1c1f1a',
+            'vault-surface': '#262922',
+            'vault-border': '#4a4d40',
+            'vault-green': '#6cbf6c',
+            'vault-yellow': '#f4e4a4',
+            'vault-red': '#cc6666',
+            'vault-blue': '#5b8cb4',
+            'vault-text': '#e0e0d0',
+            'vault-muted': '#8b8e82',
+          },
+          fontFamily: {
+            mono: ['"Share Tech Mono"', 'monospace'],
+            sans: ['"Inter"', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-out',
+            'slide-up': 'slideUp 0.35s ease-out',
+            'pulse-glow': 'pulseGlow 0.8s ease-in-out',
+            'blink': 'blink 1s step-end infinite',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(12px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            pulseGlow: {
+              '0%, 100%': { boxShadow: '0 0 4px rgba(108, 191, 108, 0.4)' },
+              '50%': { boxShadow: '0 0 14px rgba(108, 191, 108, 0.7)' },
+            },
+            blink: {
+              '0%, 100%': { opacity: '1' },
+              '50%': { opacity: '0.4' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+    body {
+      background-color: #1c1f1a;
+      font-family: 'Inter', system-ui, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-image: radial-gradient(circle at 20% 20%, rgba(108, 191, 108, 0.04) 0%, transparent 50%);
+    }
+
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1c1f1a;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #4a4d40;
+      border-radius: 3px;
+    }
+
+    /* Glow effects */
+    .glow-border {
+      box-shadow: 0 0 10px rgba(108, 191, 108, 0.15);
+      border: 1px solid #4a4d40;
+    }
+    .glow-text {
+      text-shadow: 0 0 6px rgba(108, 191, 108, 0.5);
+    }
+
+    /* Terminal-style prompt */
+    .prompt::before {
+      content: "> ";
+      color: #6cbf6c;
+      font-weight: 600;
+    }
+
+    /* Option buttons */
+    .option-btn {
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid #4a4d40;
+      background-color: #262922;
+      color: #e0e0d0;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .option-btn:not(.locked):hover {
+      border-color: #f4e4a4;
+      background-color: #2d3029;
+      box-shadow: 0 0 8px rgba(244, 228, 164, 0.25);
+      transform: translateY(-1px);
+    }
+    .option-btn.locked {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .option-btn.correct-choice {
+      border-color: #6cbf6c !important;
+      background-color: #1d2e1d !important;
+      box-shadow: 0 0 12px rgba(108, 191, 108, 0.35) !important;
+    }
+    .option-btn.incorrect-choice {
+      border-color: #cc6666 !important;
+      background-color: #2e1d1d !important;
+      box-shadow: 0 0 12px rgba(204, 102, 102, 0.35) !important;
+    }
+    .option-btn.dimmed {
+      opacity: 0.4;
+    }
+
+    /* Manual input fields */
+    input.manual-input {
+      background-color: #1c1f1a;
+      border: 1px solid #4a4d40;
+      color: #e0e0d0;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-family: 'Share Tech Mono', monospace;
+      transition: all 0.2s;
+    }
+    input.manual-input:focus {
+      outline: none;
+      border-color: #f4e4a4;
+      box-shadow: 0 0 8px rgba(244, 228, 164, 0.3);
+    }
+
+    /* Mode toggle */
+    .mode-toggle-btn {
+      transition: all 0.2s;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .mode-toggle-btn.active {
+      border-color: #f4e4a4 !important;
+      color: #f4e4a4 !important;
+      background-color: #2d3220 !important;
+      box-shadow: 0 0 8px rgba(244, 228, 164, 0.3);
+    }
+
+    /* Retro button */
+    .retro-btn {
+      background-color: #3a4034;
+      border: 1px solid #f4e4a4;
+      color: #f4e4a4;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: all 0.2s;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .retro-btn:hover:not(:disabled) {
+      background-color: #4a503e;
+      border-color: #f4e4a4;
+      box-shadow: 0 0 12px rgba(244, 228, 164, 0.3);
+    }
+    .retro-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Radio & checkbox styles */
+    input[type="checkbox"], input[type="radio"] {
+      accent-color: #f4e4a4;
+      width: 1.1rem;
+      height: 1.1rem;
+      cursor: pointer;
+    }
+    input[type="radio"]:disabled {
+      accent-color: #6b6b6b;
+      cursor: not-allowed;
+    }
+
+    /* Progress bar */
+    .progress-fill {
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (max-width: 640px) {
+      .option-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6 w-full">
+  <div class="w-full max-w-2xl mx-auto space-y-6">
+
+    <!-- ========== HEADER ========== -->
+    <header class="text-center mb-2">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight" style="font-family: 'Share Tech Mono', monospace;">
+        <span class="text-vault-green">⚛</span> <span class="text-vault-text">PHYSICS</span>
+        <span class="text-vault-yellow">QUIZ</span>
+      </h1>
+      <p class="text-vault-muted text-sm mt-1 font-mono">// NUCLEAR EDITION · CLASSROOM SAFE</p>
+    </header>
+
+    <!-- ========== CONFIGURATION PANEL ========== -->
+    <section id="configPanel" class="bg-vault-surface border border-vault-border rounded-xl p-5 sm:p-7 animate-fade-in glow-border">
+      <h2 class="text-vault-green font-mono text-lg font-semibold mb-5 prompt">STATION SETUP</h2>
+
+      <!-- Input Mode Toggle -->
+      <div class="mb-6">
+        <label class="block text-vault-muted text-sm font-medium mb-3 font-mono">// INPUT MODE</label>
+        <div class="flex gap-2" id="modeToggleGroup">
+          <button data-mode="multiple" class="mode-toggle-btn active flex-1 px-4 py-2.5 rounded-lg border border-vault-border bg-vault-bg text-vault-text font-mono text-sm font-semibold transition">
+            <span class="text-vault-green">[ ]</span> MULTI‑CHOICE
+          </button>
+          <button data-mode="manual" class="mode-toggle-btn flex-1 px-4 py-2.5 rounded-lg border border-vault-border bg-vault-bg text-vault-text font-mono text-sm font-semibold transition">
+            <span class="text-vault-green">[#]</span> MANUAL ENTRY
+          </button>
+        </div>
+        <p class="text-vault-muted text-xs mt-2 font-mono">// manual mode: enter number + unit</p>
+      </div>
+
+      <!-- Topic Selection (6 topics now) -->
+      <div class="mb-5">
+        <label class="block text-vault-muted text-sm font-medium mb-3 font-mono">// TOPIC SELECTION</label>
+        <div class="flex flex-wrap gap-3" id="topicCheckboxes">
+          <!-- Original three -->
+          <label class="inline-flex items-center gap-2 px-3 py-2.5 bg-vault-bg hover:bg-vault-surface border border-vault-border hover:border-vault-yellow rounded-lg cursor-pointer transition-all duration-200 select-none">
+            <input type="checkbox" value="Kinetic Energy" class="topic-checkbox" checked>
+            <span class="text-sm font-medium text-vault-text">Kinetic Energy</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-2.5 bg-vault-bg hover:bg-vault-surface border border-vault-border hover:border-vault-yellow rounded-lg cursor-pointer transition-all duration-200 select-none">
+            <input type="checkbox" value="Elastic Potential Energy" class="topic-checkbox" checked>
+            <span class="text-sm font-medium text-vault-text">Elastic Potential Energy</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-2.5 bg-vault-bg hover:bg-vault-surface border border-vault-border hover:border-vault-yellow rounded-lg cursor-pointer transition-all duration-200 select-none">
+            <input type="checkbox" value="Gravitational Potential Energy" class="topic-checkbox" checked>
+            <span class="text-sm font-medium text-vault-text">Gravitational Potential Energy</span>
+          </label>
+          <!-- New three -->
+          <label class="inline-flex items-center gap-2 px-3 py-2.5 bg-vault-bg hover:bg-vault-surface border border-vault-border hover:border-vault-yellow rounded-lg cursor-pointer transition-all duration-200 select-none">
+            <input type="checkbox" value="Specific Heat Capacity" class="topic-checkbox" checked>
+            <span class="text-sm font-medium text-vault-text">Specific Heat Capacity</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-2.5 bg-vault-bg hover:bg-vault-surface border border-vault-border hover:border-vault-yellow rounded-lg cursor-pointer transition-all duration-200 select-none">
+            <input type="checkbox" value="Power Energy Transferred" class="topic-checkbox" checked>
+            <span class="text-sm font-medium text-vault-text">Power Energy Transferred</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-3 py-2.5 bg-vault-bg hover:bg-vault-surface border border-vault-border hover:border-vault-yellow rounded-lg cursor-pointer transition-all duration-200 select-none">
+            <input type="checkbox" value="Power Work Done" class="topic-checkbox" checked>
+            <span class="text-sm font-medium text-vault-text">Power Work Done</span>
+          </label>
+        </div>
+        <p id="topicError" class="text-vault-red text-xs mt-2 hidden font-mono">⚠ select at least one topic</p>
+      </div>
+
+      <!-- Difficulty (disabled levels) -->
+      <div class="mb-5">
+        <label class="block text-vault-muted text-sm font-medium mb-3 font-mono">// DIFFICULTY</label>
+        <div class="flex flex-wrap gap-3">
+          <label class="inline-flex items-center gap-2 px-4 py-2.5 bg-vault-bg border border-vault-yellow rounded-lg cursor-pointer select-none">
+            <input type="radio" name="difficulty" value="1" checked>
+            <span class="text-sm font-semibold text-vault-yellow font-mono">LEVEL 1</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-4 py-2.5 bg-vault-bg border border-vault-border rounded-lg cursor-not-allowed select-none opacity-60">
+            <input type="radio" name="difficulty" value="2" disabled>
+            <span class="text-sm font-medium text-vault-muted font-mono">LEVEL 2</span>
+          </label>
+          <label class="inline-flex items-center gap-2 px-4 py-2.5 bg-vault-bg border border-vault-border rounded-lg cursor-not-allowed select-none opacity-60">
+            <input type="radio" name="difficulty" value="3" disabled>
+            <span class="text-sm font-medium text-vault-muted font-mono">LEVEL 3</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Quantity -->
+      <div class="mb-6">
+        <label for="quantityInput" class="block text-vault-muted text-sm font-medium mb-2 font-mono">// QUESTIONS (1‑20)</label>
+        <input type="number" id="quantityInput" min="1" max="20" step="1" value="5"
+          class="manual-input w-24 text-center text-lg font-mono font-bold"
+          placeholder="5">
+        <p id="quantityError" class="text-vault-red text-xs mt-2 hidden font-mono">⚠ enter integer 1–20</p>
+      </div>
+
+      <!-- Start Button -->
+      <button id="startQuizBtn"
+        class="retro-btn w-full py-3.5 px-6 font-bold text-lg rounded-lg flex items-center justify-center gap-2">
+        <span class="text-xl">⚡</span> INITIALIZE QUIZ
+      </button>
+    </section>
+
+    <!-- ========== LOADING PANEL ========== -->
+    <section id="loadingPanel" class="bg-vault-surface border border-vault-border rounded-xl p-8 sm:p-10 text-center hidden animate-fade-in glow-border">
+      <div class="font-mono text-vault-yellow text-2xl mb-4 animate-pulse">⏳</div>
+      <p class="text-vault-text font-mono font-medium" id="loadingText">FETCHING QUESTIONS...</p>
+      <p class="text-vault-muted text-sm mt-2 font-mono" id="loadingDetail">contacting nuclear lab server</p>
+      <p id="loadingError" class="text-vault-red text-sm mt-3 hidden font-mono"></p>
+      <button id="retryBtn" class="retro-btn mt-4 px-5 py-2 rounded-lg font-mono font-semibold text-sm hidden">
+        ⏳ RETRY
+      </button>
+    </section>
+
+    <!-- ========== QUIZ PANEL ========== -->
+    <section id="quizPanel" class="bg-vault-surface border border-vault-border rounded-xl p-5 sm:p-7 hidden animate-slide-up glow-border">
+      <!-- Progress header -->
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2 font-mono">
+        <span class="text-sm font-semibold text-vault-green bg-vault-bg px-3 py-1 rounded-full" id="progressLabel">Q 1/5</span>
+        <span class="text-sm font-semibold text-vault-muted bg-vault-bg px-3 py-1 rounded-full" id="scoreLabel">Σ 0</span>
+        <span class="text-xs text-vault-muted bg-vault-bg px-2 py-1 rounded-lg" id="topicBadge">TOPIC</span>
+      </div>
+      <!-- Progress bar -->
+      <div class="w-full h-1.5 bg-vault-bg rounded-full mb-6 overflow-hidden">
+        <div class="h-full bg-vault-green rounded-full progress-fill" id="progressBar" style="width: 0%;"></div>
+      </div>
+
+      <!-- Question text -->
+      <div class="mb-5 min-h-[60px]">
+        <p class="text-base sm:text-lg font-medium text-vault-text leading-relaxed font-mono" id="questionText">
+          Question text appears here...
+        </p>
+      </div>
+
+      <!-- Dynamic answer area -->
+      <div id="answerArea" class="space-y-3 mb-4">
+        <!-- Multiple choice buttons or manual input injected here -->
+      </div>
+
+      <!-- Feedback -->
+      <div id="feedbackMessage" class="text-sm font-mono font-semibold min-h-[24px] mb-3 hidden"></div>
+
+      <!-- Next / Submit button -->
+      <button id="nextQuestionBtn"
+        class="retro-btn w-full py-3 px-6 font-bold rounded-lg hidden items-center justify-center gap-2">
+        <span id="nextBtnText">NEXT ⚡</span>
+      </button>
+    </section>
+
+    <!-- ========== RESULTS PANEL ========== -->
+    <section id="resultsPanel" class="bg-vault-surface border border-vault-border rounded-xl p-5 sm:p-7 hidden animate-slide-up glow-border">
+      <div class="text-center mb-6">
+        <span class="text-5xl font-mono text-vault-green glow-text" id="resultsEmoji">☢</span>
+        <h2 class="text-2xl sm:text-3xl font-bold text-vault-text font-mono mt-2">QUIZ COMPLETE</h2>
+        <p class="text-vault-muted mt-1 font-mono text-sm" id="resultsSubtitle">// radiation levels nominal</p>
+      </div>
+
+      <!-- Score display -->
+      <div class="flex justify-center mb-6">
+        <div class="w-40 h-40 sm:w-48 sm:h-48 rounded-full border-2 border-vault-yellow flex items-center justify-center bg-vault-bg shadow-[0_0_20px_rgba(244,228,164,0.15)]">
+          <div class="text-center font-mono">
+            <span class="text-5xl font-extrabold text-vault-yellow" id="finalScore">0</span>
+            <span class="text-2xl font-bold text-vault-muted">/</span>
+            <span class="text-2xl font-bold text-vault-muted" id="finalTotal">0</span>
+            <p class="text-xs text-vault-muted mt-1" id="finalPercentage">0%</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance message -->
+      <div class="text-center mb-6 px-4 py-3 bg-vault-bg rounded-lg border border-vault-border font-mono text-sm" id="performanceMessage">
+        <p class="text-vault-text"></p>
+      </div>
+
+      <!-- Question history -->
+      <div class="mb-5 max-h-64 overflow-y-auto custom-scrollbar space-y-2 pr-1" id="questionHistory"></div>
+
+      <!-- Restart -->
+      <button id="restartBtn"
+        class="retro-btn w-full py-3.5 px-6 font-bold rounded-lg flex items-center justify-center gap-2 text-lg">
+        ⚛ NEW QUIZ
+      </button>
+    </section>
+  </div>
+
+  <script>
+    (function() {
+      // ── DOM refs ──
+      const configPanel = document.getElementById('configPanel');
+      const loadingPanel = document.getElementById('loadingPanel');
+      const quizPanel = document.getElementById('quizPanel');
+      const resultsPanel = document.getElementById('resultsPanel');
+      const startBtn = document.getElementById('startQuizBtn');
+      const retryBtn = document.getElementById('retryBtn');
+      const nextBtn = document.getElementById('nextQuestionBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const quantityInput = document.getElementById('quantityInput');
+      const topicError = document.getElementById('topicError');
+      const quantityError = document.getElementById('quantityError');
+      const loadingError = document.getElementById('loadingError');
+      const loadingDetail = document.getElementById('loadingDetail');
+      const progressLabel = document.getElementById('progressLabel');
+      const scoreLabel = document.getElementById('scoreLabel');
+      const topicBadge = document.getElementById('topicBadge');
+      const progressBar = document.getElementById('progressBar');
+      const questionText = document.getElementById('questionText');
+      const answerArea = document.getElementById('answerArea');
+      const feedbackMsg = document.getElementById('feedbackMessage');
+      const nextBtnText = document.getElementById('nextBtnText');
+      const finalScore = document.getElementById('finalScore');
+      const finalTotal = document.getElementById('finalTotal');
+      const finalPercentage = document.getElementById('finalPercentage');
+      const resultsEmoji = document.getElementById('resultsEmoji');
+      const resultsSubtitle = document.getElementById('resultsSubtitle');
+      const performanceMsg = document.getElementById('performanceMessage');
+      const questionHistory = document.getElementById('questionHistory');
+
+      // ── State ──
+      let quizMode = 'multiple'; // 'multiple' or 'manual'
+      let selectedTopics = [];
+      let quantity = 5;
+      let questions = [];
+      let currentIndex = 0;
+      let score = 0;
+      let userAnswers = [];
+      let answerLocked = false;
+      let selectedLetterForCurrent = null;
+
+      // ── Panel visibility ──
+      function showPanel(panel) {
+        [configPanel, loadingPanel, quizPanel, resultsPanel].forEach(p => p.classList.add('hidden'));
+        panel.classList.remove('hidden');
+        if (panel === quizPanel || panel === resultsPanel) {
+          panel.classList.add('animate-slide-up');
+          setTimeout(() => panel.classList.remove('animate-slide-up'), 400);
+        }
+      }
+
+      // ── Mode toggle ──
+      document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-toggle-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          quizMode = btn.dataset.mode;
+        });
+      });
+
+      // ── Validation ──
+      function getSelectedTopics() {
+        return Array.from(document.querySelectorAll('.topic-checkbox:checked')).map(cb => cb.value);
+      }
+
+      function validateQuantity() {
+        const val = quantityInput.value.trim();
+        const num = Number(val);
+        return val !== '' && Number.isInteger(num) && num >= 1 && num <= 20;
+      }
+
+      // ── API ──
+      async function fetchSingleQuestion(topic) {
+        const url = `https://mcq-gen-v1-0.onrender.com/api/question?topic=${encodeURIComponent(topic)}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data.question_text || !data.options || !data.correct_letter) throw new Error('Bad format');
+        ['A','B','C','D'].forEach(l => { if (!data.options[l]) throw new Error('Missing option '+l); });
+        if (!['A','B','C','D'].includes(data.correct_letter)) throw new Error('Invalid correct letter');
+        return { ...data, topic };
+      }
+
+      async function fetchAllQuestions(topics, count) {
+        const proms = [];
+        for (let i=0; i<count; i++) {
+          const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+          proms.push(fetchSingleQuestion(randomTopic));
+        }
+        return Promise.all(proms);
+      }
+
+      // ── Parse correct option for manual mode (handles new units like W, J/(kg·°C) etc.) ──
+      function parseCorrectOption(question) {
+        const correctText = question.options[question.correct_letter];
+        const match = correctText.match(/^(-?\d+\.?\d*)\s*(.*)$/);
+        if (match) {
+          return { number: parseFloat(match[1]), unit: match[2].trim() };
+        }
+        return { number: null, unit: null, fullText: correctText };
+      }
+
+      // ── Start quiz ──
+      async function startQuiz() {
+        selectedTopics = getSelectedTopics();
+        if (selectedTopics.length === 0) {
+          topicError.classList.remove('hidden');
+          return;
+        }
+        topicError.classList.add('hidden');
+        if (!validateQuantity()) {
+          quantityError.classList.remove('hidden');
+          quantityInput.focus();
+          return;
+        }
+        quantityError.classList.add('hidden');
+        quantity = parseInt(quantityInput.value, 10);
+
+        // reset
+        questions = []; currentIndex = 0; score = 0; userAnswers = []; answerLocked = false;
+        selectedLetterForCurrent = null;
+
+        showPanel(loadingPanel);
+        loadingError.classList.add('hidden');
+        retryBtn.classList.add('hidden');
+        loadingDetail.textContent = `preparing ${quantity} question${quantity>1?'s':''}...`;
+        startBtn.disabled = true;
+
+        try {
+          questions = await fetchAllQuestions(selectedTopics, quantity);
+          if (!questions.length) throw new Error('Empty set');
+          showPanel(quizPanel);
+          renderCurrentQuestion();
+          startBtn.disabled = false;
+        } catch(e) {
+          console.error(e);
+          loadingError.textContent = `ERR: ${e.message}`;
+          loadingError.classList.remove('hidden');
+          retryBtn.classList.remove('hidden');
+          loadingDetail.textContent = 'connection lost – check the reactor';
+          startBtn.disabled = false;
+        }
+      }
+
+      // ── Render question ──
+      function renderCurrentQuestion() {
+        if (currentIndex >= questions.length) {
+          finishQuiz();
+          return;
+        }
+        const q = questions[currentIndex];
+        answerLocked = false;
+        selectedLetterForCurrent = null;
+        feedbackMsg.classList.add('hidden');
+        feedbackMsg.textContent = '';
+        nextBtn.classList.add('hidden');
+        answerArea.innerHTML = '';
+
+        const pct = Math.round((currentIndex / questions.length) * 100);
+        progressBar.style.width = pct + '%';
+        progressLabel.textContent = `Q ${currentIndex+1}/${questions.length}`;
+        scoreLabel.textContent = `Σ ${score}`;
+        topicBadge.textContent = q.topic;
+        questionText.textContent = q.question_text;
+
+        if (quizMode === 'multiple') {
+          renderMultipleChoice(q);
+        } else {
+          renderManualInput(q);
+        }
+
+        quizPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function renderMultipleChoice(q) {
+        const letters = ['A','B','C','D'];
+        letters.forEach(letter => {
+          const btn = document.createElement('button');
+          btn.className = 'option-btn w-full text-left flex items-center gap-3 px-4 py-3.5 rounded-lg font-mono text-sm';
+          btn.setAttribute('data-letter', letter);
+          btn.innerHTML = `<span class="text-vault-yellow font-bold w-7 h-7 flex items-center justify-center border border-vault-border rounded-full">${letter}</span><span>${escapeHTML(q.options[letter])}</span>`;
+          btn.addEventListener('click', () => handleMultipleChoice(letter, btn));
+          answerArea.appendChild(btn);
+        });
+      }
+
+      function renderManualInput(q) {
+        const container = document.createElement('div');
+        container.className = 'space-y-3';
+        container.innerHTML = `
+          <div class="flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-[120px]">
+              <label class="block text-vault-muted text-xs font-mono mb-1">VALUE</label>
+              <input type="number" id="manualValue" step="any" class="manual-input w-full" placeholder="0.00">
+            </div>
+            <div class="w-28">
+              <label class="block text-vault-muted text-xs font-mono mb-1">UNIT</label>
+              <input type="text" id="manualUnit" class="manual-input w-full" placeholder="J, W...">
+            </div>
+            <button id="submitManualBtn" class="retro-btn px-5 py-2.5 font-bold text-sm rounded-lg">
+              CHECK
+            </button>
+          </div>
+        `;
+        answerArea.appendChild(container);
+
+        document.getElementById('submitManualBtn').addEventListener('click', handleManualSubmit);
+        const valInput = document.getElementById('manualValue');
+        const unitInput = document.getElementById('manualUnit');
+        [valInput, unitInput].forEach(inp => {
+          inp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleManualSubmit();
+          });
+        });
+      }
+
+      function handleMultipleChoice(letter, btn) {
+        if (answerLocked) return;
+        answerLocked = true;
+        selectedLetterForCurrent = letter;
+        const q = questions[currentIndex];
+        const isCorrect = letter === q.correct_letter;
+
+        const allBtns = answerArea.querySelectorAll('.option-btn');
+        allBtns.forEach(b => b.classList.add('locked'));
+        allBtns.forEach(b => {
+          if (b.dataset.letter === q.correct_letter) b.classList.add('correct-choice');
+          else if (b.dataset.letter === letter && !isCorrect) b.classList.add('incorrect-choice');
+          else if (b.dataset.letter !== letter) b.classList.add('dimmed');
+        });
+
+        if (isCorrect) {
+          score++;
+          scoreLabel.textContent = `Σ ${score}`;
+          feedbackMsg.textContent = '✓ CORRECT';
+          feedbackMsg.className = 'text-sm font-mono font-semibold text-vault-green mb-3';
+        } else {
+          feedbackMsg.textContent = `✗ INCORRECT · answer: ${q.correct_letter}`;
+          feedbackMsg.className = 'text-sm font-mono font-semibold text-vault-red mb-3';
+        }
+        feedbackMsg.classList.remove('hidden');
+        userAnswers.push({ question: q, selected: letter, isCorrect });
+        showNextButton();
+      }
+
+      function handleManualSubmit() {
+        if (answerLocked) return;
+        const q = questions[currentIndex];
+        const parsed = parseCorrectOption(q);
+        const valInput = document.getElementById('manualValue');
+        const unitInput = document.getElementById('manualUnit');
+        const userNum = parseFloat(valInput.value);
+        const userUnit = unitInput.value.trim();
+
+        let isCorrect = false;
+        if (parsed.number !== null) {
+          const numMatch = !isNaN(userNum) && Math.abs(userNum - parsed.number) < 0.001;
+          const unitMatch = userUnit.toLowerCase() === parsed.unit.toLowerCase();
+          isCorrect = numMatch && unitMatch;
+        } else {
+          const combined = (valInput.value + ' ' + userUnit).trim();
+          isCorrect = combined.toLowerCase() === parsed.fullText.toLowerCase();
+        }
+
+        answerLocked = true;
+        valInput.disabled = true;
+        unitInput.disabled = true;
+        const submitBtn = document.getElementById('submitManualBtn');
+        if (submitBtn) submitBtn.disabled = true;
+
+        if (isCorrect) {
+          score++;
+          scoreLabel.textContent = `Σ ${score}`;
+          feedbackMsg.textContent = '✓ CORRECT';
+          feedbackMsg.className = 'text-sm font-mono font-semibold text-vault-green mb-3';
+        } else {
+          const correctDisplay = parsed.number !== null ? `${parsed.number} ${parsed.unit}` : parsed.fullText;
+          feedbackMsg.textContent = `✗ INCORRECT · answer: ${correctDisplay}`;
+          feedbackMsg.className = 'text-sm font-mono font-semibold text-vault-red mb-3';
+        }
+        feedbackMsg.classList.remove('hidden');
+        userAnswers.push({ question: q, selected: `${userNum} ${userUnit}`, isCorrect });
+        showNextButton();
+      }
+
+      function showNextButton() {
+        const isLast = currentIndex >= questions.length - 1;
+        nextBtnText.textContent = isLast ? 'RESULTS ☢' : 'NEXT ⚡';
+        nextBtn.classList.remove('hidden');
+        nextBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function goToNext() {
+        if (!answerLocked) return;
+        currentIndex++;
+        if (currentIndex >= questions.length) finishQuiz();
+        else renderCurrentQuestion();
+      }
+
+      function finishQuiz() {
+        const total = questions.length;
+        const pct = Math.round((score / total) * 100);
+        finalScore.textContent = score;
+        finalTotal.textContent = total;
+        finalPercentage.textContent = pct + '%';
+
+        if (pct === 100) { resultsEmoji.textContent = '☢'; resultsSubtitle.textContent = '// flawless reactor output'; }
+        else if (pct >= 80) { resultsEmoji.textContent = '☢'; resultsSubtitle.textContent = '// excellent radiation management'; }
+        else if (pct >= 60) { resultsEmoji.textContent = '⚛'; resultsSubtitle.textContent = '// stable but needs enrichment'; }
+        else { resultsEmoji.textContent = '⚠'; resultsSubtitle.textContent = '// core meltdown risk – review'; }
+
+        const msgP = performanceMsg.querySelector('p');
+        if (pct >= 80) msgP.textContent = '⚛ Nuclear physicist in training. You understand energy concepts well.';
+        else if (pct >= 50) msgP.textContent = '⚡ Solid foundation – revisit the questions you missed to strengthen your reactor core.';
+        else msgP.textContent = '🔬 The fission is unstable. Study the formulas and attempt another cycle.';
+        performanceMsg.className = 'text-center mb-6 px-4 py-3 bg-vault-bg rounded-lg border border-vault-border font-mono text-sm';
+
+        questionHistory.innerHTML = '';
+        userAnswers.forEach((ua, idx) => {
+          const div = document.createElement('div');
+          div.className = `flex items-start gap-3 p-3 rounded-lg text-sm font-mono ${
+            ua.isCorrect ? 'border border-vault-green bg-[#1d2e1d]' : 'border border-vault-red bg-[#2e1d1d]'
+          }`;
+          const qText = escapeHTML(ua.question.question_text);
+          const userAns = typeof ua.selected === 'string' ? ua.selected : ua.selected;
+          const correctAns = quizMode === 'multiple' ? ua.question.correct_letter : 
+            (parseCorrectOption(ua.question).number !== null ? `${parseCorrectOption(ua.question).number} ${parseCorrectOption(ua.question).unit}` : ua.question.options[ua.question.correct_letter]);
+          div.innerHTML = `
+            <span class="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs ${ua.isCorrect ? 'bg-vault-green text-vault-bg' : 'bg-vault-red text-white'}">${ua.isCorrect ? '✓' : '✗'}</span>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-vault-text truncate" title="${qText}">Q${idx+1}: ${qText}</p>
+              <p class="text-xs mt-1 text-vault-muted">your: <span class="${ua.isCorrect ? 'text-vault-green' : 'text-vault-red'}">${userAns}</span> | correct: <span class="text-vault-green">${correctAns}</span></p>
+            </div>
+          `;
+          questionHistory.appendChild(div);
+        });
+
+        showPanel(resultsPanel);
+        resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function resetQuiz() {
+        questions = []; currentIndex = 0; score = 0; userAnswers = []; answerLocked = false;
+        progressBar.style.width = '0%';
+        feedbackMsg.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+        questionText.textContent = 'Question text appears here...';
+        progressLabel.textContent = 'Q 1/5';
+        scoreLabel.textContent = 'Σ 0';
+        topicBadge.textContent = 'TOPIC';
+        showPanel(configPanel);
+        startBtn.disabled = false;
+        loadingError.classList.add('hidden');
+        retryBtn.classList.add('hidden');
+      }
+
+      function escapeHTML(str) {
+        const d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+      }
+
+      // ── Event listeners ──
+      startBtn.addEventListener('click', startQuiz);
+      retryBtn.addEventListener('click', startQuiz);
+      nextBtn.addEventListener('click', goToNext);
+      restartBtn.addEventListener('click', resetQuiz);
+      quantityInput.addEventListener('input', () => {
+        quantityError.classList.add('hidden');
+        const v = quantityInput.value;
+        if (v && !/^\d+$/.test(v)) quantityInput.value = v.replace(/[^\d]/g, '');
+        if (quantityInput.value && (parseInt(quantityInput.value,10) < 1 || parseInt(quantityInput.value,10) > 20)) {
+          quantityError.classList.remove('hidden');
+        } else quantityError.classList.add('hidden');
+      });
+      document.querySelectorAll('.topic-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+          if (getSelectedTopics().length > 0) topicError.classList.add('hidden');
+        });
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (quizPanel.classList.contains('hidden') || answerLocked) return;
+        if (quizMode === 'multiple') {
+          const key = e.key.toUpperCase();
+          if (['A','B','C','D'].includes(key)) {
+            const btn = answerArea.querySelector(`[data-letter="${key}"]`);
+            if (btn && !btn.classList.contains('locked')) {
+              e.preventDefault();
+              btn.click();
+            }
+          }
+        }
+        if ((e.key === 'Enter' || e.key === ' ') && answerLocked) {
+          e.preventDefault();
+          goToNext();
+        }
+      });
+
+      showPanel(configPanel);
+      console.log('⚛ Physics Quiz · Nuclear Edition · online');
+    })();
+  </script>
+</body>
+</html>
